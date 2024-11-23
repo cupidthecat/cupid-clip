@@ -1,6 +1,6 @@
 # cupid-clip
 
-CupidClip is a terminal-based clipboard utility written in C. It reads the contents of files and directories, with an optional recursive mode, and copies the concatenated content to the system clipboard using `xclip`. 
+cupid-clip is a terminal-based clipboard utility written in C. It reads the contents of files and directories, with an optional recursive mode, and copies the concatenated content to the system clipboard using `xclip`. 
 
 This tool is designed for Linux systems, offering a simple way to batch copy text data from files or directories into the clipboard.
 
