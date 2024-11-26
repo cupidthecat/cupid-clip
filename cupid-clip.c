@@ -75,13 +75,15 @@ void read_directory_and_save_to_temp(const char *directory, FILE *temp_file, int
 }
 
 int main(int argc, char *argv[]) {
-    if (argc < 2 || argc > 4) {
-        fprintf(stderr, "Usage: %s [-R] [-V] <directory_or_file>\n", argv[0]);
+    if (argc < 2) {
+        fprintf(stderr, "Usage: %s [-R] [-V] <directory_or_file> [more_files_or_directories...]\n", argv[0]);
         return EXIT_FAILURE;
     }
 
     int recursive = 0, verbose = 0;
-    const char *path = NULL;
+    // Create an array to hold paths
+    const char **paths = malloc(sizeof(char *) * argc); // Max possible paths is argc
+    int path_count = 0;
 
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "-R") == 0) {
@@ -89,24 +91,20 @@ int main(int argc, char *argv[]) {
         } else if (strcmp(argv[i], "-V") == 0) {
             verbose = 1;
         } else {
-            path = argv[i];
+            paths[path_count++] = argv[i];
         }
     }
 
-    if (!path) {
+    if (path_count == 0) {
         fprintf(stderr, "Error: No file or directory specified.\n");
-        return EXIT_FAILURE;
-    }
-
-    struct stat path_stat;
-    if (stat(path, &path_stat) != 0) {
-        fprintf(stderr, "Error: '%s' does not exist.\n", path);
+        free(paths);
         return EXIT_FAILURE;
     }
 
     FILE *temp_file = fopen(TEMP_FILE, "w");
     if (!temp_file) {
         perror("Error creating temporary file");
+        free(paths);
         return EXIT_FAILURE;
     }
     fclose(temp_file);
@@ -114,23 +112,32 @@ int main(int argc, char *argv[]) {
     temp_file = fopen(TEMP_FILE, "a");
     if (!temp_file) {
         perror("Error opening temporary file for appending");
+        free(paths);
         return EXIT_FAILURE;
     }
 
-    if (S_ISREG(path_stat.st_mode)) {
-        if (verbose) {
-            printf("Processing file: %s\n", path);
+    for (int i = 0; i < path_count; i++) {
+        const char *path = paths[i];
+        struct stat path_stat;
+        if (stat(path, &path_stat) != 0) {
+            fprintf(stderr, "Error: '%s' does not exist.\n", path);
+            continue;
         }
-        read_file_and_save_to_temp(path, temp_file, verbose);
-    } else if (S_ISDIR(path_stat.st_mode)) {
-        if (verbose) {
-            printf("Processing directory: %s%s\n", path, recursive ? " (recursively)" : "");
+
+        if (S_ISREG(path_stat.st_mode)) {
+            if (verbose) {
+                printf("Processing file: %s\n", path);
+            }
+            read_file_and_save_to_temp(path, temp_file, verbose);
+        } else if (S_ISDIR(path_stat.st_mode)) {
+            if (verbose) {
+                printf("Processing directory: %s%s\n", path, recursive ? " (recursively)" : "");
+            }
+            read_directory_and_save_to_temp(path, temp_file, recursive, verbose);
+        } else {
+            fprintf(stderr, "Error: '%s' is not a valid file or directory.\n", path);
+            continue;
         }
-        read_directory_and_save_to_temp(path, temp_file, recursive, verbose);
-    } else {
-        fprintf(stderr, "Error: '%s' is not a valid file or directory.\n", path);
-        fclose(temp_file);
-        return EXIT_FAILURE;
     }
 
     fclose(temp_file);
@@ -144,5 +151,6 @@ int main(int argc, char *argv[]) {
     // Always print this message, regardless of the verbose flag
     printf("Operation completed successfully.\n");
 
+    free(paths);
     return EXIT_SUCCESS;
 }
