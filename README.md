@@ -10,6 +10,7 @@ This tool is designed for Linux systems, offering a simple way to batch copy tex
 - **Directory Support:** Read and copy the content of all files in specified directories.
 - **Recursive Mode (`-R`):** Traverse directories recursively, reading and copying content from all nested files.
 - **Verbose Mode (`-V`):** Provides detailed output during processing.
+- **Ignore Paths (`-I`):** Exclude specific files or directories from processing.
 - **Clipboard Integration:** Uses `xclip` to copy content directly to the system clipboard.
 - **Completion Messages:** Always displays output upon completion to inform the user.
 
@@ -51,6 +52,15 @@ This will produce an executable named `cupid-clip`.
 
 - **`-R`:** Enable recursive processing of directories.
 - **`-V`:** Enable verbose mode for detailed output during processing.
+- **`-I <file_or_dir>`:** **(New)** Ignore a file or directory (and its subcontents, if it’s a directory).  
+  - You can specify multiple `-I` options to ignore multiple paths.  
+  - By default, the ignore check uses *prefix* or *exact* matches, so any subdirectory or file within the ignored path is skipped.
+
+> **Note**: Options can be placed anywhere in the command line. If you provide a path for `-I`, ensure you include an argument immediately after the `-I` flag, for example:  
+> 
+> ```bash
+> ./cupid-clip -I /home/user/secret file1.txt
+> ```
 
 ### Examples
 
@@ -78,13 +88,20 @@ This will produce an executable named `cupid-clip`.
   ./cupid-clip -R dir1 dir2
   ```
 
+- **Ignore Specific Paths While Recursing:**
+
+  ```bash
+  ./cupid-clip -R -I /home/user/docs/ignore_this \
+               -I /home/user/docs/subdir/secret.txt \
+               /home/user/docs
+  ```
+  Here, the directory `ignore_this/` and file `secret.txt` (inside `subdir`) are skipped.
+
 - **Combined Options and Multiple Paths:**
 
   ```bash
   ./cupid-clip -R -V file1.txt dir1 dir2 file2.txt
   ```
-
-**Note:** Options can be placed anywhere in the command line.
 
 ## File Structure
 
@@ -94,7 +111,7 @@ This will produce an executable named `cupid-clip`.
 
 1. **Argument Parsing:**
 
-   - Parses command-line arguments to identify options (`-R`, `-V`) and collect paths to files or directories.
+   - Parses command-line arguments to identify options (`-R`, `-V`, `-I`) and collect paths to files or directories.
    - Supports multiple files and directories as input.
 
 2. **File or Directory Validation:**
@@ -102,20 +119,25 @@ This will produce an executable named `cupid-clip`.
    - Verifies if each input path is a valid file or directory.
    - Handles errors gracefully if a path is invalid, and continues processing other paths.
 
-3. **Content Aggregation:**
+3. **Ignoring Files or Directories (`-I`):**
 
-   - Reads the content of each specified file or files in directories.
+   - If the path of a file or directory matches any ignore pattern (using prefix matching or exact match), it is skipped.
+   - Useful for skipping large or sensitive directories when performing recursive operations.
+
+4. **Content Aggregation:**
+
+   - Reads the content of each specified file or files in directories (unless ignored).
    - Appends all content into a temporary file (`/tmp/cupid_clip_temp.txt`).
 
-4. **Clipboard Copying:**
+5. **Clipboard Copying:**
 
    - Uses `xclip` to copy the concatenated content to the system clipboard.
 
-5. **Cleanup:**
+6. **Cleanup:**
 
    - Deletes the temporary file after the operation.
 
-6. **Completion Message:**
+7. **Completion Message:**
 
    - Always displays a message upon completion, informing the user that the operation was successful.
 
@@ -182,6 +204,34 @@ This will produce an executable named `cupid-clip`.
 
    - Provides detailed output during processing.
 
+### Scenario 4: Ignoring Specific Directories or Files
+
+1. **Input (Recursive + Ignore):**
+
+   ```bash
+   ./cupid-clip -R -I /home/user/docs/ignore_this \
+                -I /home/user/docs/subdir/secret.txt \
+                /home/user/docs
+   ```
+
+2. **Output:**
+
+   ```
+   Processing directory: /home/user/docs (recursively)
+   Ignoring: /home/user/docs/ignore_this
+   Reading file: /home/user/docs/file1.txt
+   Reading file: /home/user/docs/file2.txt
+   ...
+   Ignoring: /home/user/docs/subdir/secret.txt
+   ...
+   Content copied to clipboard successfully.
+   Operation completed successfully.
+   ```
+
+3. **Result:**
+
+   - Skips the entire `ignore_this` directory and the `secret.txt` file while copying the rest.
+
 ## Error Handling
 
 - Displays an error if a specified path does not exist, but continues processing other valid paths.
@@ -205,3 +255,7 @@ Contributions are welcome! If you'd like to improve cupid-clip, feel free to:
 ## License
 
 This project is licensed under the GNU General Public License v3.0.
+
+---
+
+With the **`-I` option** support, you can now exclude specific files or entire directories from processing, making your clipboard operations more efficient and customizable.
