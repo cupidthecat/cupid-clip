@@ -190,7 +190,7 @@ void read_directory_and_save_to_temp(const char *directory, FILE *temp_file,
                 if (verbose) {
                     printf("Entering directory: %s\n", filepath);
                 }
-                read_directory_and_save_to_temp(filepath, temp_file, recursive,
+                read_directory_and_save_to_temp(filepath, temp_file, recursive, 
                                                 verbose, ignore_list, ignore_count);
             }
         } else {
@@ -203,14 +203,23 @@ void read_directory_and_save_to_temp(const char *directory, FILE *temp_file,
 
 int main(int argc, char *argv[]) {
     if (argc < 2) {
-        fprintf(stderr, "Usage: %s [-R] [-V] [-I <file_or_dir>] <path1> [path2] ...\n", argv[0]);
+        fprintf(stderr, "Usage: %s [-R] [-V] [-I <file_or_dir>]... <path1> [path2] ...\n", argv[0]);
         return EXIT_FAILURE;
     }
 
     int recursive = 0, verbose = 0;
     const char **ignore_list = malloc(sizeof(char *) * argc);
+    if (!ignore_list) {
+        fprintf(stderr, "Memory allocation failed for ignore_list.\n");
+        return EXIT_FAILURE;
+    }
     int ignore_count = 0;
     const char **paths = malloc(sizeof(char *) * argc);
+    if (!paths) {
+        fprintf(stderr, "Memory allocation failed for paths.\n");
+        free(ignore_list);
+        return EXIT_FAILURE;
+    }
     int path_count = 0;
 
     // 1. Parse arguments
@@ -221,13 +230,30 @@ int main(int argc, char *argv[]) {
             verbose = 1;
         } 
         else if (strcmp(argv[i], "-I") == 0) {
-            // --- FIX #1: increment i and expand the actual next arg ---
+            // Treat only the next argument as an ignore path
             if (i + 1 < argc) {
                 i++;  // move to the actual ignore path
                 char *expanded = expand_tilde(argv[i]);
+                if (!expanded) {
+                    fprintf(stderr, "Error expanding path: %s\n", argv[i]);
+                    // Free previously allocated memory before exiting
+                    for (int j = 0; j < ignore_count; j++) {
+                        free((void *)ignore_list[j]);
+                    }
+                    for (int j = 0; j < path_count; j++) {
+                        free((void *)paths[j]);
+                    }
+                    free(ignore_list);
+                    free(paths);
+                    return EXIT_FAILURE;
+                }
                 ignore_list[ignore_count++] = expanded;
             } else {
                 fprintf(stderr, "Error: -I option requires an argument.\n");
+                // Free allocated memory before exiting
+                for (int j = 0; j < ignore_count; j++) {
+                    free((void *)ignore_list[j]);
+                }
                 free(ignore_list);
                 free(paths);
                 return EXIT_FAILURE;
@@ -236,12 +262,29 @@ int main(int argc, char *argv[]) {
         else {
             // --- FIX #2: the "else" covers all non -I, -R, -V args (actual paths) ---
             char *expanded = expand_tilde(argv[i]);
+            if (!expanded) {
+                fprintf(stderr, "Error expanding path: %s\n", argv[i]);
+                // Free previously allocated memory before exiting
+                for (int j = 0; j < ignore_count; j++) {
+                    free((void *)ignore_list[j]);
+                }
+                for (int j = 0; j < path_count; j++) {
+                    free((void *)paths[j]);
+                }
+                free(ignore_list);
+                free(paths);
+                return EXIT_FAILURE;
+            }
             paths[path_count++] = expanded;
         }
     }
 
     if (path_count == 0) {
         fprintf(stderr, "Error: No file or directory specified.\n");
+        // Free allocated memory before exiting
+        for (int j = 0; j < ignore_count; j++) {
+            free((void *)ignore_list[j]);
+        }
         free(ignore_list);
         free(paths);
         return EXIT_FAILURE;
@@ -249,23 +292,25 @@ int main(int argc, char *argv[]) {
 
     // 2. Remove trailing slashes from ignored paths
     for (int i = 0; i < ignore_count; i++) {
-        // We need a modifiable copy of ignore_list[i]
-        char *mutable_copy = strdup(ignore_list[i]);
-        remove_trailing_slash(mutable_copy);
-        ignore_list[i] = mutable_copy;
+        remove_trailing_slash((char *)ignore_list[i]);
     }
 
     // 3. Remove trailing slashes from the main paths
     for (int i = 0; i < path_count; i++) {
-        char *mutable_copy = strdup(paths[i]);
-        remove_trailing_slash(mutable_copy);
-        paths[i] = mutable_copy;
+        remove_trailing_slash((char *)paths[i]);
     }
 
     // 4. Create temp file
     FILE *temp_file = fopen(TEMP_FILE, "w");
     if (!temp_file) {
         perror("Error creating temporary file");
+        // Free allocated memory before exiting
+        for (int j = 0; j < ignore_count; j++) {
+            free((void *)ignore_list[j]);
+        }
+        for (int j = 0; j < path_count; j++) {
+            free((void *)paths[j]);
+        }
         free(ignore_list);
         free(paths);
         return EXIT_FAILURE;
@@ -275,6 +320,13 @@ int main(int argc, char *argv[]) {
     temp_file = fopen(TEMP_FILE, "a");
     if (!temp_file) {
         perror("Error opening temporary file for appending");
+        // Free allocated memory before exiting
+        for (int j = 0; j < ignore_count; j++) {
+            free((void *)ignore_list[j]);
+        }
+        for (int j = 0; j < path_count; j++) {
+            free((void *)paths[j]);
+        }
         free(ignore_list);
         free(paths);
         return EXIT_FAILURE;
