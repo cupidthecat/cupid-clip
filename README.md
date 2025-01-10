@@ -1,6 +1,6 @@
 # cupid-clip
 
-cupid-clip is a terminal-based clipboard utility written in C. It reads the contents of multiple files and directories, with optional recursive and verbose modes, and copies the concatenated content to the system clipboard using `xclip`.
+**cupid-clip** is a terminal-based clipboard utility written in C. It reads the contents of multiple files and directories, with optional recursive and verbose modes, and copies the concatenated content to the system clipboard using `xclip`.
 
 This tool is designed for Linux systems, offering a simple way to batch copy text data from multiple files or directories into the clipboard.
 
@@ -16,7 +16,7 @@ This tool is designed for Linux systems, offering a simple way to batch copy tex
 
 ## Prerequisites
 
-To build and run cupid-clip, you need the following:
+To build and run **cupid-clip**, you need the following:
 
 - `gcc` (GNU Compiler Collection)
 - `make` (optional but recommended for build automation)
@@ -40,6 +40,12 @@ gcc -o cupid-clip cupid-clip.c
 
 This will produce an executable named `cupid-clip`.
 
+To make `cupid-clip` executable from anywhere in the terminal, move the compiled binary to `/usr/bin`:
+
+```bash
+sudo mv cupid-clip /usr/bin
+```
+
 ## Running the Program
 
 ### Basic Usage
@@ -52,12 +58,12 @@ This will produce an executable named `cupid-clip`.
 
 - **`-R`:** Enable recursive processing of directories.
 - **`-V`:** Enable verbose mode for detailed output during processing.
-- **`-I <file_or_dir>`:** **(New)** Ignore a file or directory (and its subcontents, if it’s a directory).  
-  - You can specify multiple `-I` options to ignore multiple paths.  
+- **`-I <file_or_dir>`:** **Ignore** a specific file or directory (and its subcontents, if it’s a directory).
+  - **Important:** Each `-I` flag accepts **only one** path. To ignore multiple files or directories, use multiple `-I` flags, each followed by a single path.
   - By default, the ignore check uses *prefix* or *exact* matches, so any subdirectory or file within the ignored path is skipped.
 
-> **Note**: Options can be placed anywhere in the command line. If you provide a path for `-I`, ensure you include an argument immediately after the `-I` flag, for example:  
-> 
+> **Note:** Options can be placed anywhere in the command line. If you provide a path for `-I`, ensure you include an argument immediately after the `-I` flag. For example:
+>
 > ```bash
 > ./cupid-clip -I /home/user/secret file1.txt
 > ```
@@ -91,16 +97,15 @@ This will produce an executable named `cupid-clip`.
 - **Ignore Specific Paths While Recursing:**
 
   ```bash
-  ./cupid-clip -R -I /home/user/docs/ignore_this \
-               -I /home/user/docs/subdir/secret.txt \
-               /home/user/docs
+  ./cupid-clip -R -I "/home/frank/frankhagan.online/better/music/" -I "/home/frank/frankhagan.online/.idea/" /home/frank/frankhagan.online/better/
   ```
-  Here, the directory `ignore_this/` and file `secret.txt` (inside `subdir`) are skipped.
+
+  Here, the directories `/home/frank/frankhagan.online/better/music/` and `/home/frank/frankhagan.online/.idea/` are **ignored** during the recursive processing of `/home/frank/frankhagan.online/better/`.
 
 - **Combined Options and Multiple Paths:**
 
   ```bash
-  ./cupid-clip -R -V file1.txt dir1 dir2 file2.txt
+  ./cupid-clip -R -V -I "/path/to/ignore1" -I "/path/to/ignore2" file1.txt dir1 dir2
   ```
 
 ## File Structure
@@ -113,11 +118,12 @@ This will produce an executable named `cupid-clip`.
 
    - Parses command-line arguments to identify options (`-R`, `-V`, `-I`) and collect paths to files or directories.
    - Supports multiple files and directories as input.
+   - Each `-I` flag must be followed by **one** path to ignore.
 
 2. **File or Directory Validation:**
 
    - Verifies if each input path is a valid file or directory.
-   - Handles errors gracefully if a path is invalid, and continues processing other paths.
+   - Handles errors gracefully if a path is invalid and continues processing other paths.
 
 3. **Ignoring Files or Directories (`-I`):**
 
@@ -209,9 +215,7 @@ This will produce an executable named `cupid-clip`.
 1. **Input (Recursive + Ignore):**
 
    ```bash
-   ./cupid-clip -R -I /home/user/docs/ignore_this \
-                -I /home/user/docs/subdir/secret.txt \
-                /home/user/docs
+   ./cupid-clip -R -I "/home/user/docs/ignore_this/" -I "/home/user/docs/subdir/secret.txt" /home/user/docs/
    ```
 
 2. **Output:**
@@ -221,22 +225,52 @@ This will produce an executable named `cupid-clip`.
    Ignoring: /home/user/docs/ignore_this
    Reading file: /home/user/docs/file1.txt
    Reading file: /home/user/docs/file2.txt
-   ...
    Ignoring: /home/user/docs/subdir/secret.txt
-   ...
    Content copied to clipboard successfully.
    Operation completed successfully.
    ```
 
 3. **Result:**
 
-   - Skips the entire `ignore_this` directory and the `secret.txt` file while copying the rest.
+   - Skips the entire `ignore_this/` directory and the `secret.txt` file while copying the rest.
 
 ## Error Handling
 
-- Displays an error if a specified path does not exist, but continues processing other valid paths.
-- Skips unreadable files while processing directories and logs warnings to the terminal.
-- Provides informative messages if `xclip` is not installed or if there are issues copying to the clipboard.
+- **Missing Arguments:**
+  
+  - Displays an error if a specified path does not exist but continues processing other valid paths.
+  - Example:
+    
+    ```
+    Error: '/invalid/path' does not exist.
+    ```
+
+- **Unreadable Files:**
+  
+  - Skips unreadable files while processing directories and logs warnings to the terminal.
+  - Example:
+    
+    ```
+    Failed to open file: /path/to/unreadable_file.txt
+    ```
+
+- **Missing `xclip`:**
+  
+  - Provides an informative message if `xclip` is not installed or if there are issues copying to the clipboard.
+  - Example:
+    
+    ```
+    Failed to copy content to clipboard. Ensure xclip is installed.
+    ```
+
+- **Incorrect `-I` Usage:**
+  
+  - Alerts the user if the `-I` flag is provided without a corresponding path.
+  - Example:
+    
+    ```
+    Error: -I option requires an argument.
+    ```
 
 ## Requirements
 
@@ -246,7 +280,7 @@ This will produce an executable named `cupid-clip`.
 
 ## Contributing
 
-Contributions are welcome! If you'd like to improve cupid-clip, feel free to:
+Contributions are welcome! If you'd like to improve **cupid-clip**, feel free to:
 
 1. Fork the repository.
 2. Create a feature branch.
@@ -255,3 +289,35 @@ Contributions are welcome! If you'd like to improve cupid-clip, feel free to:
 ## License
 
 This project is licensed under the GNU General Public License v3.0.
+
+---
+
+## Additional Recommendations
+
+To further enhance the usability and robustness of **cupid-clip**, consider the following improvements:
+
+1. **Use of `getopt` for Argument Parsing:**
+   
+   Implementing `getopt` or `getopt_long` can provide more flexible and error-resistant command-line argument parsing. This approach can simplify handling options and their associated arguments.
+
+2. **Enhanced Logging:**
+   
+   Incorporate more detailed logging, especially when in verbose mode, to assist users in understanding which files are being processed or ignored.
+
+3. **Pattern-Based Ignoring:**
+   
+   Allow users to specify patterns or wildcards for the `-I` option to ignore multiple files or directories that match certain criteria.
+
+4. **Configuration Files:**
+   
+   Support reading ignore paths from a configuration file (similar to `.gitignore`), providing users with an alternative method to specify paths to exclude.
+
+5. **Error Reporting Enhancements:**
+   
+   Provide more context in error messages, such as reasons for failures (e.g., permission issues) to aid in troubleshooting.
+
+6. **Performance Optimizations:**
+   
+   Optimize file reading and writing operations for better performance, especially when dealing with large files or deeply nested directories.
+
+By implementing these recommendations, **cupid-clip** can become even more powerful and user-friendly, catering to a broader range of use cases and enhancing overall user experience.
