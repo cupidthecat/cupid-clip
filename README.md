@@ -255,7 +255,3 @@ Contributions are welcome! If you'd like to improve cupid-clip, feel free to:
 ## License
 
 This project is licensed under the GNU General Public License v3.0.
-
----
-
-With the **`-I` option** support, you can now exclude specific files or entire directories from processing, making your clipboard operations more efficient and customizable.
