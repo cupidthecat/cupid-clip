@@ -278,6 +278,10 @@ sudo mv cupid-clip /usr/bin
 - Installed `xclip` utility
 - Read permissions for files and directories
 
+## Todo
+
+- Add a config for files that cupid-clip will always ignore
+
 ## Contributing
 
 Contributions are welcome! If you'd like to improve **cupid-clip**, feel free to:
