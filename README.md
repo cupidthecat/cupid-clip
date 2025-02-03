@@ -14,6 +14,11 @@ This tool is designed for Linux systems, offering a simple way to batch copy tex
 - **Clipboard Integration:** Uses `xclip` to copy content directly to the system clipboard.
 - **Completion Messages:** Always displays output upon completion to inform the user.
 
+## Todo
+
+- **Config**: Configure files or directories to ignore instead of using the -I argument
+- **Make install**: Add make install to move executable to bin folder to use terminal wide 
+
 ## Prerequisites
 
 To build and run **cupid-clip**, you need the following:
