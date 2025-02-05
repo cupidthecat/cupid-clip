@@ -35,7 +35,45 @@ Run the following command to install the necessary packages:
 sudo pacman -S base-devel xclip
 ```
 
-## Building the Project
+## Building with Makefile
+
+1. **Build the Executable**
+
+   In your project directory, run:
+
+   ```bash
+   make
+   ```
+
+   This compiles `cupid-clip.c` into the `cupid-clip` executable.
+
+2. **Install the Executable**
+
+   To install the executable to `/usr/bin` (so you can run it from anywhere), run:
+
+   ```bash
+   sudo make install
+   ```
+
+   *Note: `sudo` is required because writing to `/usr/bin` needs root privileges.*
+
+3. **Clean the Build**
+
+   To remove the compiled executable from your project directory, run:
+
+   ```bash
+   make clean
+   ```
+
+4. **Uninstall the Executable**
+
+   If you wish to remove the installed executable from `/usr/bin`, run:
+
+   ```bash
+   sudo make uninstall
+   ```
+
+## Building with GCC
 
 To compile the project, run:
 
