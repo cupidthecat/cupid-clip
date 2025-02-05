@@ -35,7 +35,7 @@ ignore = /home/user/Documents/ignored_folder
 # Set recursive mode by default
 recursive = true
 
-# Enable verbose mode by default
+# Disable verbose mode by default
 verbose = false
 ```
 
