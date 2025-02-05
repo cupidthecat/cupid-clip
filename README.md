@@ -4,6 +4,8 @@
 
 This tool is designed for Linux systems, offering a simple way to batch copy text data from multiple files or directories into the clipboard.
 
+It now supports **configuration files** via **cupidconf**, allowing users to define persistent settings such as ignored paths, recursive mode, and verbosity.
+
 ## Features
 
 - **Multiple File Support:** Read and copy the content of multiple files.
@@ -11,13 +13,31 @@ This tool is designed for Linux systems, offering a simple way to batch copy tex
 - **Recursive Mode (`-R`):** Traverse directories recursively, reading and copying content from all nested files.
 - **Verbose Mode (`-V`):** Provides detailed output during processing.
 - **Ignore Paths (`-I`):** Exclude specific files or directories from processing.
+- **Configurable Settings via `~/.cupidclip.conf`**
+  - Automatically loads ignored paths.
+  - Stores default recursive and verbose mode settings.
 - **Clipboard Integration:** Uses `xclip` to copy content directly to the system clipboard.
 - **Completion Messages:** Always displays output upon completion to inform the user.
 
-## Todo
+## Configuration Support (via cupidconf)
 
-- **Config**: Configure files or directories to ignore instead of using the -I argument
-- **Make install**: Add make install to move executable to bin folder to use terminal wide 
+**cupid-clip** can now load settings from `~/.cupidclip.conf`. This allows users to define:
+- Default ignored directories and files.
+- Persistent recursive (`-R`) and verbose (`-V`) settings.
+
+### Example Configuration File (`~/.cupidclip.conf`)
+
+```ini
+# Ignore these directories and files
+ignore = /home/user/.cache
+ignore = /home/user/Documents/ignored_folder
+
+# Set recursive mode by default
+recursive = true
+
+# Enable verbose mode by default
+verbose = false
+```
 
 ## Prerequisites
 
