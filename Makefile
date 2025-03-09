@@ -5,16 +5,34 @@ CFLAGS  = -Wall -Wextra -O2
 # Target executable name
 TARGET  = cupid-clip
 
-# Default target: build the executable
-all: $(TARGET)
+# Source file path
+SRC     = src/cupid-clip.c
 
-# Compile the source file
-$(TARGET): cupid-clip.c
-	$(CC) $(CFLAGS) -o $(TARGET) cupid-clip.c
+# Library directory and name
+LIBDIR  = lib
+LIBNAME = cupidconf
+LIBFILE = $(LIBDIR)/lib$(LIBNAME).a
+
+# Include library directory and link the library
+LDFLAGS = -L$(LIBDIR) -l$(LIBNAME)
+
+# Default target: build the executable
+all: $(LIBFILE) $(TARGET)
+
+# Build the library
+$(LIBFILE): $(LIBDIR)/cupidconf.c
+	@echo "Building library..."
+	$(CC) $(CFLAGS) -c $(LIBDIR)/cupidconf.c -o $(LIBDIR)/cupidconf.o
+	ar rcs $(LIBFILE) $(LIBDIR)/cupidconf.o
+
+# Compile the source file and link the library
+$(TARGET): $(SRC) $(LIBFILE)
+	@echo "Building executable..."
+	$(CC) $(CFLAGS) -o $(TARGET) $(SRC) $(LDFLAGS)
 
 # Clean up build artifacts
 clean:
-	rm -f $(TARGET)
+	rm -f $(TARGET) $(LIBDIR)/*.o $(LIBFILE)
 
 # Install the executable to /usr/bin
 install: $(TARGET)
